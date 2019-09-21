@@ -594,9 +594,6 @@ static struct ctl_table kern_table[] = {
 		.extra1		= &zero,
 		.extra2		= &two,
 	},
-		.extra1		= &zero,
-		.extra2		= &one_thousand,
-	},
 #endif
 	{
 		.procname	= "sched_force_lb_enable",

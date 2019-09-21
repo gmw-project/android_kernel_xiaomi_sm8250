@@ -651,7 +651,6 @@ static inline int sched_set_boost(int enable)
 	return -EINVAL;
 }
 static inline void free_task_load_ptrs(struct task_struct *p) { }
-
 static inline void sched_update_cpu_freq_min_max(const cpumask_t *cpus,
 					u32 fmin, u32 fmax) { }
 
