@@ -1088,6 +1088,8 @@ static int mmc_sdio_resume(struct mmc_host *host)
 			host->ops->enable_sdio_irq(host, 1);
 	}
 
+	mmc_retune_needed(host);
+
 out:
 	mmc_log_string(host, "Exit err: %d\n", err);
 	mmc_release_host(host);
