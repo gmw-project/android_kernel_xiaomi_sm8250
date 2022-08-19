@@ -477,7 +477,9 @@ struct sock {
 #else
 	/* sk_peer_lock is in the ANDROID_KABI_RESERVE(1) field below */
 #endif
-        pid_t                   pid_num;
+#if IS_ENABLED(CONFIG_MIHW)
+	pid_t			pid_num;
+#endif
 	struct pid		*sk_peer_pid;
 	const struct cred	*sk_peer_cred;
 
