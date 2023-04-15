@@ -1600,8 +1600,8 @@ static void bq27xxx_battery_update_unlocked(struct bq27xxx_device_info *di)
 
 	di->last_update = jiffies;
 
-
 	if (!di->removed && poll_interval > 0)
+		mod_delayed_work(system_wq, &di->work, poll_interval * HZ);
 }
 
 void bq27xxx_battery_update(struct bq27xxx_device_info *di)
