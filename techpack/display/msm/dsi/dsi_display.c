@@ -5122,7 +5122,7 @@ static ssize_t sysfs_dynamic_dsi_clk_write(struct device *dev,
 	return rc;
 
 }
-
+/*
 static ssize_t sysfs_hbm_read(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
@@ -5181,7 +5181,7 @@ error:
 static DEVICE_ATTR(hbm, 0644,
 			sysfs_hbm_read,
 			sysfs_hbm_write);
-
+*/
 
 static DEVICE_ATTR(dynamic_dsi_clock, 0644,
 			sysfs_dynamic_dsi_clk_read,
