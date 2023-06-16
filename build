@@ -2,20 +2,18 @@
 cd ..
 MAIN=$PWD
 cd kernel_xiaomi_sm8250
-KERNEL_DIR=$PWD
-ANYKERNEL_DIR=$KERNEL_DIR/AnyKernel3
-CLANG_DIR=$MAIN/clang
-compiler_name="Oxygen"
-DTSI_DIR=$KERNEL_DIR/arch/arm64/boot/dts/vendor/qcom
-APOLLO=$DTSI_DIR/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
-ALIOTH=$DTSI_DIR/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
+export KERNEL_DIR=$PWD
+export ANYKERNEL_DIR=$KERNEL_DIR/AnyKernel3
+export ARCH="arm64"
+export CLANG_DIR="$MAIN/clang"
+export CC="${CLANG_DIR}/bin/clang"
+export LINKER="lld"
+export compiler_name="Oxygen"
+export DTSI_DIR=$KERNEL_DIR/arch/arm64/boot/dts/vendor/qcom
+export APOLLO=$DTSI_DIR/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
+export ALIOTH=$DTSI_DIR/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
 KERNELVER=$(make kernelversion)
 DATE_CLOCK=$(date +'%H%M-%d%m%Y')
-
-if [[ -z "${JTHREAD}" ]]; then
-    COUNT="$(grep -c '^processor' /proc/cpuinfo)"
-    export JTHREAD="$((COUNT + 2))"
-fi
 
 aosp_build() {
 	sed -i 's/qcom,mdss-pan-physical-width-dimension = <695>;/qcom,mdss-pan-physical-width-dimension = <70>;/g' $APOLLO
@@ -59,6 +57,7 @@ build() {
 	BUILD_START=$(date +"%s")
 	export USE_CCACHE=1
 	export CCACHE_EXEC=/usr/bin/ccache
+	MAKE="./makeparallel"
 	ccache -M 10G
 	ccache -o compression=true
 
@@ -73,21 +72,31 @@ build() {
 	fi;
 	export KBUILD_COMPILER_STRING="$set_compiler"
 	
-	make O=out ARCH=arm64 $DEFCONFIG \
-		ARCH=arm64 \
-		LLVM=1 \
-		LLVM_IAS=1 \
-		CROSS_COMPILE=aarch64-linux-gnu- \
-		CROSS_COMPILE_ARM32=arm-linux-gnueabi-
-		    
+	make O=out ARCH=${ARCH} $DEFCONFIG \
+			ARCH=${ARCH} \
+			LLVM=1 \
+			LLVM_IAS=1 \
+			CC=${CC} \
+			CROSS_COMPILE=${CLANG_DIR}/bin/aarch64-linux-gnu- \
+			CROSS_COMPILE_COMPAT=${CLANG_DIR}/bin/arm-linux-gnueabi- \
+			LD_LIBRARY_PATH=${CLANG_DIR}/lib \
+			    
 	make O=out \
-		ARCH=arm64 \
-		LLVM=1 \
-		LLVM_IAS=1 \
-		CROSS_COMPILE=aarch64-linux-gnu- \
-		CLANG_TRIPLE=aarch64-linux-gnu- \
-		CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-		-j${JTHREAD} CC="ccache clang"
+			ARCH=${ARCH} \
+			LLVM=1 \
+			LLVM_IAS=1 \
+			CC=${CC} \
+			CLANG_TRIPLE=${CLANG_DIR}/bin/aarch64-linux-gnu- \
+			CROSS_COMPILE=${CLANG_DIR}/bin/aarch64-linux-gnu- \
+			CROSS_COMPILE_COMPAT=${CLANG_DIR}/bin/arm-linux-gnueabi- \
+			LD=ld.${LINKER} \
+			AR=llvm-ar \
+			NM=llvm-nm \
+			OBJCOPY=llvm-objcopy \
+			OBJDUMP=llvm-objdump \
+			STRIP=llvm-strip \
+			ld-name=${LINKER} \
+			-j$(nproc --all) CC="ccache ${CC}"
 	
 	restore_dtsi_dimension
 	
@@ -164,7 +173,6 @@ while true; do
     echo "Build kernel for :"
     echo "(1) MI 10T/Pro (apollo)"
     echo "(2) POCO F3 (alioth)"
-    echo "(3) POCO F4 (munch)"
     read -p "" choose
     case $choose in
         1 ) 
