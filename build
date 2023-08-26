@@ -15,6 +15,13 @@ export ALIOTH=$DTSI_DIR/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
 KERNELVER=$(make kernelversion)
 DATE_CLOCK=$(date +'%H%M-%d%m%Y')
 
+if [[ $(git remote | grep ksu) != "ksu" ]]; then
+     git remote add ksu https://github.com/tiann/KernelSU
+     git fetch ksu main > /dev/null
+fi
+
+KSUVER=$(git rev-list --count ksu/main)
+
 aosp_build() {
 	sed -i 's/qcom,mdss-pan-physical-width-dimension = <695>;/qcom,mdss-pan-physical-width-dimension = <70>;/g' $APOLLO
 	sed -i 's/qcom,mdss-pan-physical-height-dimension = <1544>;/qcom,mdss-pan-physical-height-dimension = <155>;/g' $APOLLO
@@ -30,6 +37,7 @@ restore_dtsi_dimension() {
 }
 
 build_non_ksu() {
+	sed -i "s/CONFIG_GIT_VERSION=${KSUVER}/CONFIG_GIT_VERSION=null/g" $KERNEL_DIR/arch/arm64/configs/vendor/${DEVICE}_defconfig
 	sed -i 's/CONFIG_KSU=y/# CONFIG_KSU is not set/g' $KERNEL_DIR/arch/arm64/configs/vendor/${DEVICE}_defconfig
 	sed -i 's/CONFIG_OVERLAY_FS_REDIRECT_DIR=y/# CONFIG_OVERLAY_FS_REDIRECT_DIR is not set/g' $KERNEL_DIR/arch/arm64/configs/vendor/${DEVICE}_defconfig
 	sed -i 's/CONFIG_OVERLAY_FS_INDEX=y/# CONFIG_OVERLAY_FS_INDEX is not set/g' $KERNEL_DIR/arch/arm64/configs/vendor/${DEVICE}_defconfig
@@ -37,6 +45,7 @@ build_non_ksu() {
 }
 
 build_ksu() {
+	sed -i "s/CONFIG_GIT_VERSION=null/CONFIG_GIT_VERSION=${KSUVER}/g" $KERNEL_DIR/arch/arm64/configs/vendor/${DEVICE}_defconfig
 	sed -i 's/# CONFIG_KSU is not set/CONFIG_KSU=y/g' $KERNEL_DIR/arch/arm64/configs/vendor/${DEVICE}_defconfig
 	sed -i 's/# CONFIG_OVERLAY_FS_REDIRECT_DIR is not set/CONFIG_OVERLAY_FS_REDIRECT_DIR=y/g' $KERNEL_DIR/arch/arm64/configs/vendor/${DEVICE}_defconfig
 	sed -i 's/# CONFIG_OVERLAY_FS_INDEX is not set/CONFIG_OVERLAY_FS_INDEX=y/g' $KERNEL_DIR/arch/arm64/configs/vendor/${DEVICE}_defconfig
